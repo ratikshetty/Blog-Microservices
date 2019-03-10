@@ -1,17 +1,54 @@
 import flask
 from flask import request, jsonify, json
+from flask import Response
 import datetime
 import sqlite3
+from functools import wraps
 
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
+
+author = ''
+
+# app.config['BASIC_AUTH_USERNAME'] = 'john'
+# app.config['BASIC_AUTH_PASSWORD'] = 'matrix'
+
+# basic_auth = BasicAuth(app)
+
+# class check(BasicAuth):
+#     def check_credentials(username, password):
+#         return true
+
+def check_auth(username, password):
+    """This function is called to check if a username /
+    password combination is valid.
+    """
+    return username == 'john' and password == 'matrix'
+
+def authenticate():
+    """Sends a 401 response that enables basic auth"""
+    return "invalid"
+
+def check_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        global author
+        if not auth or not check_auth(auth.username, auth.password):
+            author = 'Anonymous Coward'
+        else:
+            author= auth.username
+        return f(*args, **kwargs)
+    return decorated
+
 
 @app.route('/', methods=['GET'])
 def home():
     return "<h1>Comments API</p>"
 
 @app.route('/new', methods=['POST'])
+@check_auth
 def new():
 
     result = request.json
@@ -26,11 +63,11 @@ def new():
     else:
         return "Error: No title field provided. Please specify an title."
 
-    if 'author' in result:
-        author = result['author']
-    else:
-        return "Error: No author field provided. Please specify an author."
-
+    # if 'author' in result:
+    #     author = result['author']
+    # else:
+    #     return "Error: No author field provided. Please specify an author."
+    global author
 
     # connection
 
@@ -67,7 +104,10 @@ def new():
 
     conn.close()
 
-    return "Article Created"
+    resp = Response(status=200, mimetype='application/json')
+
+    # return "Comment Created"
+    return resp
 
     
 @app.route('/delete', methods=['GET'])
@@ -183,6 +223,8 @@ def retrieve():
     conn.close()
 
     return result
+
+
 
 app.run()
 
