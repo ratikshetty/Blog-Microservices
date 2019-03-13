@@ -1,15 +1,28 @@
 import flask
-from flask import request, jsonify, json
+from flask import request, jsonify, json, Response, g
 import datetime
 import sqlite3
 from functools import wraps
 from flask_basicauth import BasicAuth
 
+DATABASE = 'blog.db'
 
 app = flask.Flask(__name__)
 app.config["DEBUG"] = True
 
 author = ''
+
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
+
+def dict_factory(cursor, row):
+    d = {}
+    for idx, col in enumerate(cursor.description):
+        d[col[0]] = row[idx]
+    return d
 
 # app.config['BASIC_AUTH_USERNAME'] = 'john'
 # app.config['BASIC_AUTH_PASSWORD'] = 'matrix'
@@ -24,11 +37,41 @@ def check_auth(username, password):
     """This function is called to check if a username /
     password combination is valid.
     """
-    return username == 'john' and password == 'matrix'
+    conn = sqlite3.connect('blog.db')
+
+    c = conn.cursor()
+
+    c.execute("Select password from user where name = (:username) and isDeleted=0", {"username": username})
+
+    pswd = c.fetchone()
+
+    if pswd is None:
+        return False
+
+    pswd = str(pswd[0])
+    db_password = hashlib.md5(password.encode())
+    db_password = str(db_password.hexdigest())    
+    # pswd = pswd[0]
+
+    print(pswd)
+    print(db_password)
+
+
+    if pswd is not None:
+        return pswd == db_password
+    
+
+
+    # return username == 'john' and password == 'matrix'
 
 def authenticate():
     """Sends a 401 response that enables basic auth"""
-    return "invalid"
+    # return "invalid"
+
+    resp = Response(status=404, mimetype='application/json')
+
+
+    return resp
 
 def requires_auth(f):
     @wraps(f)
@@ -79,39 +122,77 @@ def new():
 
     curDate = datetime.datetime.now()
 
-    c.execute("insert into article (content, title, author, createdDate, modifiedDate) values (:content, :title, :author, :createdDate, :modifiedDate)", {'content': content, 'title': title, 'author': author, 'createdDate': str(curDate), 'modifiedDate': str(curDate)})
-    
-    conn.commit()
+    try:
 
-    c.execute("select * from article where isDeleted= 0")
 
-    print(c.fetchall())
+        c.execute("insert into article (content, title, author, createdDate, modifiedDate) values (:content, :title, :author, :createdDate, :modifiedDate)", {'content': content, 'title': title, 'author': author, 'createdDate': str(curDate), 'modifiedDate': str(curDate)})
+        
+        conn.commit()
 
-    conn.close()
+        # c.execute("select * from article where isDeleted= 0")
 
-    return "Article Created"
+        print(title)
 
-@app.route('/search', methods=['GET'])
-def search():
+        conn.close()
 
-    if 'title' in request.args:
-        title = request.args['title']
-    else:
+        resp = Response(status=201, mimetype='application/json')
+        resp.headers['location'] = 'http://127.0.0.1:5000/search?title=' + title
+
+        # response = jsonify()
+        # response.status_code = 201
+        # response.headers['location'] = 'http://127.0.0.1:5000/search?title='
+        # response.autocorrect_location_header = False
+        # return response
+        
+    except sqlite3.Error as e:
+        resp = Response(status=409, mimetype='application/json')
+
+    return resp
+
+
+@app.route('/search/<title>', methods=['GET'])
+def search(title):
+
+    # if 'title' in request.args:
+    #     title = request.args['title']
+    # else:
+    #     return "Error: No title field provided. Please specify Title of the article."
+
+    if title =='':
         return "Error: No title field provided. Please specify Title of the article."
 
     # connection
 
     conn = sqlite3.connect('blog.db')
-
+    conn.row_factory = dict_factory
     c = conn.cursor()
+
+    # db = get_db()
+    
+    #c = db.cursor()
+
+    # c.execute("select count(*) from article where isDeleted = 0 and title = (:title) COLLATE NOCASE", {'title': title})
+
+    # result=c.fetchone()
+    # number_of_rows=result[0]
+
+    # if number_of_rows == 0:
+    #     resp = Response(status=404, mimetype='application/json')
+    #     return resp
+
 
     c.execute("select * from article where isDeleted = 0 and title = (:title) COLLATE NOCASE", {'title': title})
 
-    result = jsonify(c.fetchone()) 
+    result = c.fetchone()
+
+    if result is None:
+        resp = Response(status=404, mimetype='application/json')
+        return resp
 
     c.close()
+    
 
-    return result
+    return jsonify(result)
 
 @app.route('/edit', methods=['PATCH'])
 @requires_auth
@@ -150,16 +231,20 @@ def edit():
 
     conn.close()
 
-    return "Article updated"
+    resp = Response(status=200, mimetype='application/json')
+    return resp
+
+    # return "Article updated"
 
 
-@app.route('/delete', methods=['GET'])
+@app.route('/delete/<title>', methods=['GET'])
 @requires_auth
-def delete():
+def delete(title):
 
-    if 'title' in request.args:
-        title = request.args['title']
-    else:
+    # if 'title' in request.args:
+    #     title = request.args['title']
+    # else:
+    if title == '':
         return "Error: No title field provided. Please specify Title of the article."
 
     global author
@@ -178,20 +263,23 @@ def delete():
     conn.commit()
     conn.close()
 
-    return "Article Deleted"
+    resp = Response(status=200, mimetype='application/json')
+    return resp
 
-@app.route('/retrieve', methods=['GET'])
-def retrieve():
+    # return "Article Deleted"
 
-    if 'number' in request.args:
-        num = request.args['number']
-    else:
-        num = -1
+@app.route('/retrieve/<num>', methods=['GET'])
+def retrieve(num):
+
+    # if 'number' in request.args:
+    #     num = request.args['number']
+    # else:
+        # num = -1
 
     # connection
 
     conn = sqlite3.connect('blog.db')
-
+    conn.row_factory = dict_factory
     c = conn.cursor()
 
     if num is -1:
@@ -210,18 +298,18 @@ def retrieve():
 
     return result
 
-@app.route('/meta', methods=['GET'])
-def meta():
+@app.route('/meta/<num>', methods=['GET'])
+def meta(num):
 
-    if 'number' in request.args:
-        num = request.args['number']
-    else:
-        num = -1
+    # if 'number' in request.args:
+    #     num = request.args['number']
+    # else:
+    #     num = -1
 
     # connection
 
     conn = sqlite3.connect('blog.db')
-
+    conn.row_factory = dict_factory
     c = conn.cursor()
 
     if num is -1:
@@ -239,7 +327,5 @@ def meta():
     conn.close()
 
     return result
-
-
 
 app.run()

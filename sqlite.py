@@ -4,15 +4,15 @@ conn = sqlite3.connect('blog.db')
 
 c = conn.cursor()
 
-# c.execute(""" CREATE TABLE article (
-#      articleId INTEGER PRIMARY KEY AUTOINCREMENT,
-#      content text,
-#      title text,
-#      author text,
-#      createdDate text,
-#      modifiedDate text,
-#      isDeleted INTEGER DEFAULT 0
-#      )""")
+c.execute(""" CREATE TABLE article (
+     articleId INTEGER PRIMARY KEY AUTOINCREMENT,
+     content text,
+     title text UNIQUE,
+     author text,
+     createdDate text,
+     modifiedDate text,
+     isDeleted INTEGER DEFAULT 0
+     )""")
 
 c.execute(""" CREATE TABLE comments (
      commentId INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -22,6 +22,16 @@ c.execute(""" CREATE TABLE comments (
      createdDate text,
      isDeleted INTEGER DEFAULT 0,
      FOREIGN KEY (articleId) REFERENCES article(articleId)
+     )""")
+
+c.execute(""" CREATE TABLE user (
+     userId INTEGER PRIMARY KEY,
+     emailid text UNIQUE,
+     name text UNIQUE,
+     password text,
+     createdDate text,
+     modifiedDate text,
+     isDeleted INTEGER DEFAULT 0
      )""")
 
 
