@@ -4,6 +4,7 @@ from flask import Response
 import datetime
 import sqlite3
 from functools import wraps
+import hashlib
 
 
 app = flask.Flask(__name__)
@@ -152,8 +153,9 @@ def new():
     return resp
 
     
-@app.route('/delete/<id>', methods=['GET'])
-def delete(id):
+@app.route('/delete', methods=['DELETE'])
+def delete():
+
 
     # if 'id' in request.args:
     #     id = request.args['id']
@@ -161,6 +163,13 @@ def delete(id):
     #     return "Error: No id field provided. Please specify id of the article."
 
     # connection
+
+    result = request.json
+
+    if 'id' in result:
+        id = result['id']
+    else:
+        return "Error: No ID field provided. Please specify ID."
 
     conn = sqlite3.connect('blog.db')
 

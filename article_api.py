@@ -4,6 +4,7 @@ import datetime
 import sqlite3
 from functools import wraps
 from flask_basicauth import BasicAuth
+import hashlib
 
 DATABASE = 'blog.db'
 
@@ -118,6 +119,10 @@ def new():
 
     conn = sqlite3.connect('blog.db')
 
+    temp_title = title.replace(" ","%20")
+
+    print(temp_title)
+
     c = conn.cursor()
 
     curDate = datetime.datetime.now()
@@ -125,7 +130,7 @@ def new():
     try:
 
 
-        c.execute("insert into article (content, title, author, createdDate, modifiedDate) values (:content, :title, :author, :createdDate, :modifiedDate)", {'content': content, 'title': title, 'author': author, 'createdDate': str(curDate), 'modifiedDate': str(curDate)})
+        c.execute("insert into article (content, title, author, url, createdDate, modifiedDate) values (:content, :title, :author, :url, :createdDate, :modifiedDate)", {'content': content, 'title': title, 'author': author, 'createdDate': str(curDate), 'modifiedDate': str(curDate), 'url': 'http://127.0.0.1:5000/search?title=' + temp_title})
         
         conn.commit()
 
