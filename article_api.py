@@ -117,20 +117,21 @@ def new():
 
     # connection
 
-    conn = sqlite3.connect('blog.db')
-
-    temp_title = title.replace(" ","%20")
-
-    print(temp_title)
-
-    c = conn.cursor()
+    
 
     curDate = datetime.datetime.now()
 
     try:
+        conn = sqlite3.connect('blog.db')
+
+        temp_title = title.replace(" ","%20")
+
+        print(temp_title)
+
+        c = conn.cursor()
 
 
-        c.execute("insert into article (content, title, author, url, createdDate, modifiedDate) values (:content, :title, :author, :url, :createdDate, :modifiedDate)", {'content': content, 'title': title, 'author': author, 'createdDate': str(curDate), 'modifiedDate': str(curDate), 'url': 'http://127.0.0.1:5000/search?title=' + temp_title})
+        c.execute("insert into article (content, title, author, url, createdDate, modifiedDate) values (:content, :title, :author, :url, :createdDate, :modifiedDate)", {'content': content, 'title': title, 'author': author, 'createdDate': str(curDate), 'modifiedDate': str(curDate), 'url': 'http://127.0.0.1:5000/search/' + temp_title})
         
         conn.commit()
 
@@ -141,7 +142,7 @@ def new():
         conn.close()
 
         resp = Response(status=201, mimetype='application/json')
-        resp.headers['location'] = 'http://127.0.0.1:5000/search?title=' + title
+        resp.headers['location'] = 'http://127.0.0.1:5000/search/' + title
 
         # response = jsonify()
         # response.status_code = 201
@@ -242,7 +243,7 @@ def edit():
     # return "Article updated"
 
 
-@app.route('/delete/<title>', methods=['GET'])
+@app.route('/delete/<title>', methods=['DELETE'])
 @requires_auth
 def delete(title):
 
