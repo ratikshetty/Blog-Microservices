@@ -136,7 +136,7 @@ def new():
 
 #     return result
 
-@app.route('/delete', methods=['GET'])
+@app.route('/delete', methods=['DELETE'])
 @requires_auth
 def delete():
 
@@ -156,29 +156,35 @@ def delete():
 
     # connection
 
-    conn = sqlite3.connect('blog.db')
-
-    c = conn.cursor()
-
-    # c.execute("""select 1 from user
-    #     where isDeleted = 0 and emailid = (:emailid) """, {'emailid': emailid })
-
-    # count = c.fetchone()
-
-    # if count == 1 :   
-    c.execute("""update user set isDeleted = 1 where isDeleted = 0 and name = (:username)""", {'username': username })
-        # flag = 1
-
-    # else:
-	    # flag = 0
-
-    conn.commit()
-    conn.close()
+    try:
 
 
-    # if flag == 1:
-    resp = Response(status=200, mimetype='application/json')
-	    
+        conn = sqlite3.connect('blog.db')
+
+        c = conn.cursor()
+
+        # c.execute("""select 1 from user
+        #     where isDeleted = 0 and emailid = (:emailid) """, {'emailid': emailid })
+
+        # count = c.fetchone()
+
+        # if count == 1 :   
+        c.execute("""update user set isDeleted = 1 where isDeleted = 0 and name = (:username)""", {'username': username })
+            # flag = 1
+
+        # else:
+            # flag = 0
+
+        conn.commit()
+        conn.close()
+
+
+        # if flag == 1:
+        resp = Response(status=200, mimetype='application/json')
+
+    except sqlite3.Error as e:
+        resp = Response(status=404, mimetype='application/json')
+            
     # else:
     #     resp = Response(status=404, mimetype='application/json')
 	    
@@ -214,34 +220,39 @@ def update():
 
     # connection
 
-    conn = sqlite3.connect('blog.db')
+    try:
 
-    c = conn.cursor()
-    	
-    # c.execute("""select 1 from user
-    #     where isDeleted = 0 and emailid = (:emailid) and password = (:oldpassword)""", {'emailid': emailid , 'oldpassword':str(db_oldpassword.hexdigest())})
+        conn = sqlite3.connect('blog.db')
 
-    # count = c.fetchone()
+        c = conn.cursor()
+            
+        # c.execute("""select 1 from user
+        #     where isDeleted = 0 and emailid = (:emailid) and password = (:oldpassword)""", {'emailid': emailid , 'oldpassword':str(db_oldpassword.hexdigest())})
+
+        # count = c.fetchone()
+        
+        # if count == 1:
+        c.execute("""update user
+            set password = (:newpassword)
+                where isDeleted = 0 and name = (:username)""", {'username': username , "newpassword" : str(db_newpassword.hexdigest())})
+        # flag = 1
+        # else:
+        # flag = 0
+
+
+        conn.commit()
+        conn.close()
+
+
+        # if flag == 1:
+        # return "updated"
+        # else:
+        # return "this data combination does not exists"
+
+        resp = Response(status=200, mimetype='application/json')
     
-    # if count == 1:
-    c.execute("""update user
-	    set password = (:newpassword)
-    	    where isDeleted = 0 and name = (:username)""", {'username': username , "newpassword" : str(db_newpassword.hexdigest())})
-	# flag = 1
-    # else:
-	# flag = 0
-
-
-    conn.commit()
-    conn.close()
-
-
-    # if flag == 1:
-	# return "updated"
-    # else:
-	# return "this data combination does not exists"
-
-    resp = Response(status=200, mimetype='application/json')
+    except sqlite3.Error as e:
+        resp = Response(status=404, mimetype='application/json')
 
     return resp
 
