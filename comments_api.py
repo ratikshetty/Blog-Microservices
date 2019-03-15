@@ -82,6 +82,17 @@ def auth(f):
         return f(*args, **kwargs)
     return decorated
 
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        global author 
+        author= auth.username
+        return f(*args, **kwargs)
+    return decorated
+
 
 @app.route('/', methods=['GET'])
 def home():
@@ -111,40 +122,48 @@ def new():
 
     # connection
 
-    conn = sqlite3.connect('blog.db')
+    try:
 
-    c = conn.cursor()
+        conn = sqlite3.connect('blog.db')
 
-    curDate = datetime.datetime.now()
+        c = conn.cursor()
 
-    c.execute("select articleId from article where isDeleted = 0 and title = (:title) COLLATE NOCASE", {'title': title})
+        curDate = datetime.datetime.now()
 
-    result_set = c.fetchone()
+        c.execute("select articleId from article where isDeleted = 0 and title = (:title) COLLATE NOCASE", {'title': title})
 
-    if result_set:
-        id = result_set[0]
-    else:
+        result_set = c.fetchone()
+
+        if result_set:
+            id = result_set[0]
+        else:
+            conn.close()
+            resp = Response(status=404, mimetype='application/json')
+            # return "Article doesn't exist or may have been deleted"
+            return resp
+
+
+        
+
+        # for row in result_set:
+        #     id = row["articleId"]
+        
+
+        c.execute("insert into comments (articleId, comment, author, createdDate) values (:id, :comment,  :author, :createdDate)", {'id': id, 'comment': comment, 'title': title, 'author': author, 'createdDate': str(curDate)})
+        
+        conn.commit()
+
+        c.execute("select * from comments where isDeleted= 0")
+
+        print(c.fetchall())
+
         conn.close()
-        return "Article doesn't exist or may have been deleted"
 
+        resp = Response(status=200, mimetype='application/json')
 
-    
+    except sqlite3.Error as e:
 
-    # for row in result_set:
-    #     id = row["articleId"]
-    
-
-    c.execute("insert into comments (articleId, comment, author, createdDate) values (:id, :comment,  :author, :createdDate)", {'id': id, 'comment': comment, 'title': title, 'author': author, 'createdDate': str(curDate)})
-    
-    conn.commit()
-
-    c.execute("select * from comments where isDeleted= 0")
-
-    print(c.fetchall())
-
-    conn.close()
-
-    resp = Response(status=200, mimetype='application/json')
+        resp = Response(status=409, mimetype='application/json')
 
     # resp = Response(js, status=200, mimetype='application/json')
     # resp.headers['Link'] = 'http://'
@@ -154,6 +173,7 @@ def new():
 
     
 @app.route('/delete', methods=['DELETE'])
+@requires_auth
 def delete():
 
 
@@ -171,24 +191,31 @@ def delete():
     else:
         return "Error: No ID field provided. Please specify ID."
 
-    conn = sqlite3.connect('blog.db')
-
-    c = conn.cursor()
-
-    c.execute("""update comments
-        set isDeleted = 1
-        where isDeleted = 0 and commentId = (:id) """, {'id': id})
+    try:
 
 
-    conn.commit()
+        conn = sqlite3.connect('blog.db')
 
-    # c.execute("select * from comments where isDeleted= 0")
+        c = conn.cursor()
 
-    # print(c.fetchall())
+        c.execute("""update comments
+            set isDeleted = 1
+            where isDeleted = 0 and commentId = (:id) and (author = (:author) OR author = 'Anonymous Coward')""", {'id': id, 'author': author})
 
-    conn.close()
 
-    resp = Response(status=200, mimetype='application/json')
+        conn.commit()
+
+        # c.execute("select * from comments where isDeleted= 0")
+
+        # print(c.fetchall())
+
+        conn.close()
+
+        resp = Response(status=200, mimetype='application/json')
+
+    except sqlite3.Error as e:
+
+        resp = Response(status=409, mimetype='application/json')
 
     return resp
 
@@ -197,7 +224,6 @@ def count(title):
 
     if title == '':
         return "Error: No title field provided. Please specify title of the article."
-
 
     # connection
 
