@@ -107,7 +107,7 @@ def new():
     if 'comment' in result:
         comment = result['comment']
     else:
-        return "Error: No omment field provided. Please specify comment."
+        return "Error: No comment field provided. Please specify comment."
 
     if 'title' in result:
         title = result['title']
@@ -159,7 +159,7 @@ def new():
 
         conn.close()
 
-        resp = Response(status=200, mimetype='application/json')
+        resp = Response(status=201, mimetype='application/json')
 
     except sqlite3.Error as e:
 
@@ -273,7 +273,7 @@ def retrieve(title, num):
     # connection
 
     conn = sqlite3.connect('blog.db')
-
+    
     c = conn.cursor()
 
     c.execute("select articleId from article where isDeleted = 0 and title = (:title) COLLATE NOCASE", {'title': title})
@@ -288,6 +288,8 @@ def retrieve(title, num):
         return resp
         # return "Article doesn't exist or may have been deleted"
 
+    conn.row_factory = dict_factory
+    c = conn.cursor()
 
     if num is -1:
 

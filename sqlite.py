@@ -12,7 +12,8 @@ c.execute(""" CREATE TABLE article (
       url text,   
       createdDate text,
       modifiedDate text,
-      isDeleted INTEGER DEFAULT 0
+      isDeleted INTEGER DEFAULT 0,
+      FOREIGN KEY (author) REFERENCES user(name)
       )""")
 
 c.execute(""" CREATE TABLE comments (
@@ -42,6 +43,7 @@ c.execute(""" CREATE TABLE tags (
      createdDate text,
      isDeleted INTEGER DEFAULT 0,
      FOREIGN KEY (articleId) REFERENCES article(articleId),
+     FOREIGN KEY (author) REFERENCES user(name),
      PRIMARY KEY (articleId, tag)
      )""")
 

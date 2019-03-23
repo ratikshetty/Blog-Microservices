@@ -3,7 +3,7 @@ from flask import request, jsonify, json, Response, g
 import datetime
 import sqlite3
 from functools import wraps
-from flask_basicauth import BasicAuth
+#from flask_basicauth import BasicAuth
 import hashlib
 
 
@@ -83,7 +83,7 @@ def new():
 
     if 'password' in result:
         password = result['password']
-	db_password = hashlib.md5(password.encode())
+        db_password = hashlib.md5(password.encode())
 	
     else:
         return "Error: No password field provided. Please specify a password."
@@ -214,7 +214,7 @@ def update():
 
     if 'newpassword' in result:
         newpassword = result['newpassword']
-	db_newpassword = hashlib.md5(newpassword.encode())
+        db_newpassword = hashlib.md5(newpassword.encode())
     else:
         return "Error: No newpassword field provided."
 

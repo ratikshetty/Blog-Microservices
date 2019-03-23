@@ -101,6 +101,7 @@ def new():
     username = auth.username
     
     result = request.json
+    new_val = 0
 
     if 'tag' in result:
         tag = str(result['tag'])
@@ -111,6 +112,11 @@ def new():
         title = result['article_title']
     else:
         return "Error: No article title field provided. Please specify an Article title."
+
+    if 'article_content' in result:
+        content = result['article_content']
+        new_val = 1
+
 
    
     global author
@@ -124,6 +130,8 @@ def new():
 
     curDate = datetime.datetime.now()
 
+    temp_title = title.replace(" ","%20")
+
     flag = 0
 
     if tag.find(',') != -1: 
@@ -133,16 +141,22 @@ def new():
         tags_list = tag
 
     try:
-	
+
+        if new_val == 1:
+            c.execute("insert into article (content, title, author, url, createdDate, modifiedDate) values (:content, :title, :author, :url, :createdDate, :modifiedDate)", {'content': content, 'title': title, 'author': author, 'createdDate': str(curDate), 'modifiedDate': str(curDate), 'url': 'http://127.0.0.1:5000/search/' + temp_title})
+            
+        
         c.execute("select articleId from article where isDeleted = 0 and title = (:title) COLLATE NOCASE", {'title': title})
 
         result_set = c.fetchone()
 
         if result_set:
-    		id = result_set[0]
+            id = result_set[0]
         else:
-    		conn.close()
-    		return "Article doesn't exist or may have been deleted"
+            conn.close()
+            resp = Response(status=404, mimetype='application/json')
+            return resp
+    		# return "Article doesn't exist or may have been deleted"
 
         if flag == 0:
             c.execute("insert into tags (articleId, tag, author, createdDate) values (:articleId, :tag, :author, :createdDate)", {'articleId': id, 'tag': tags_list, 'author': author, 'createdDate': str(curDate)})
@@ -187,7 +201,7 @@ def removeTag():
 
     print(tag)
     print(title)
-    print(author)
+    # print(author)
    
     global author
 
@@ -215,10 +229,12 @@ def removeTag():
         result_set = c.fetchone()
 
         if result_set:
-    		id = result_set[0]
+            id = result_set[0]
         else:
-    		conn.close()
-    		return "Article doesn't exist or may have been deleted"
+            conn.close()
+            resp = Response(status=404, mimetype='application/json')
+            return resp
+    		# return "Article doesn't exist or may have been deleted"
 
         print(id)
         print(flag)
@@ -292,7 +308,7 @@ def searchTag(title):
     result = jsonify(c.fetchall())
 
     if result is None:
-   	resp = Response(status=404, mimetype='application/json')
+        resp = Response(status=404, mimetype='application/json')
        	return resp
 
     conn.close()
@@ -315,7 +331,7 @@ def searchArticle(tag):
     c = conn.cursor()
     c.execute("select title from article where isDeleted = 0 and articleId in (Select articleId from tags where tag = (:tag) COLLATE NOCASE)", {'tag': tag})
 
-    result_set = c.fetchone()
+    result_set = c.fetchall()
 
        
     if result_set is None:

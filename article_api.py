@@ -3,7 +3,7 @@ from flask import request, jsonify, json, Response, g
 import datetime
 import sqlite3
 from functools import wraps
-from flask_basicauth import BasicAuth
+#from flask_basicauth import BasicAuth
 import hashlib
 
 DATABASE = 'blog.db'
@@ -187,7 +187,7 @@ def search(title):
     #     return resp
 
 
-    c.execute("select * from article where isDeleted = 0 and title = (:title) COLLATE NOCASE", {'title': title})
+    c.execute("select content from article where isDeleted = 0 and title = (:title) COLLATE NOCASE", {'title': title})
 
     result = c.fetchone()
 
