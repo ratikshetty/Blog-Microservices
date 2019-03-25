@@ -1,0 +1,150 @@
+
+---
+test_name: Add an article with a new tag
+stages:
+- name: Add an article with a new tag
+  request:
+    url: http://localhost:5300/new
+    json:
+      article_title: Creating new article and adding tag along with it
+      tag: testTag
+      article_content: This is my test case for creating article and tag at a same time
+    auth:
+    - user1
+    - password 
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 201
+    
+---
+
+---
+test_name: Adding a tag to an new article
+stages:
+- name: Adding a tag to a new article
+  request:
+    url: http://localhost:5300/new
+    json:
+      article_title: project
+      tag: tag1
+      author: user1
+    auth:
+    - user1
+    - password 
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 201
+    
+---
+
+---
+test_name: Adding a tag to an new article
+stages:
+- name: Adding a tag to a new article
+  request:
+    url: http://localhost:5300/new
+    json:
+      article_title: project new
+      tag: tag1
+      author: user1
+    auth:
+    - user1
+    - password 
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 201
+    
+---
+
+---
+test_name: List all articles for a new tag
+stages:
+- name: List all articles for a new tag
+  request:
+    url: http://localhost:5300/searchArticle/tag1
+    method: GET
+    headers:
+      content-type: application/json
+  response:
+    status_code: 200
+    body:
+      [
+        {
+          "title": "project" 
+        },
+        {
+          "title": "project new" 
+        },
+      ]
+      
+      
+---
+
+---
+test_name: Adding a tag to an existing article
+stages:
+- name: Adding a tag to a existing article
+  request:
+    url: http://localhost:5300/new
+    json:
+      article_title: project
+      tag: tag2
+      author: user1
+    auth:
+    - user1
+    - password 
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 201
+    
+---
+
+---
+test_name: Removing a tag from an article
+stages:
+- name: Removing a tag from an article
+  request:
+    url: http://localhost:5300/removeTag
+    json:
+      article_title: project
+      tag: tag2
+    auth:
+    - user1
+    - password 
+    method: DELETE
+    headers:
+      content-type: application/json
+  response:
+    status_code: 200
+    
+---
+
+---
+test_name: Adding a tag to an article that does not exist
+stages:
+- name: Adding a tag to an article that does not exist
+  request:
+    url: http://localhost:5300/new
+    json:
+      article_title: rohit_noexist
+      tag: tag
+      author: user1
+    auth:
+    - user1
+    - password 
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 404
+    
+---
+

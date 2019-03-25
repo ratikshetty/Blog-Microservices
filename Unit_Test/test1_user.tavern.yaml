@@ -1,0 +1,93 @@
+---
+test_name: Update the password for a user that does not exist
+stages:
+- name: Update the password for a user that does not exist
+  request:
+    url: http://localhost:5000/update
+    json:
+      newpassword: test123
+    auth:
+    - csuf14
+    - csuf123
+    method: PATCH
+    headers:
+      content-type: application/json
+  response:
+    status_code: 404
+    
+---
+
+---
+test_name: Create a user
+stages:
+- name: Create a new user
+  request:
+    url: http://localhost:5000/new
+    json:
+      emailid: csuf14@csu.fullerton.edu
+      name: csuf14
+      password: csuf123
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 201
+
+---
+
+---
+test_name: Change a user password
+stages:
+- name: Change a user password
+  request:
+    url: http://localhost:5000/update
+    json:
+      newpassword: test123
+    auth:
+    - csuf14
+    - csuf123
+    method: PATCH
+    headers:
+      content-type: application/json
+  response:
+    status_code: 200
+  
+---
+
+---
+test_name: Delete a user
+stages:
+- name: Delete a user
+  request:
+    url: http://localhost:5000/delete
+    auth:
+    - csuf14
+    - test123
+    method: DELETE
+    headers:
+      content-type: application/json
+  response:
+    status_code: 200
+
+    
+---
+
+---
+test_name: Change a user password for a deleted user
+stages:
+- name: Change a user password
+  request:
+    url: http://localhost:5000/update
+    json:
+      newpassword: test1234
+    auth:
+    - csuf14
+    - test123
+    method: PATCH
+    headers:
+      content-type: application/json
+  response:
+    status_code: 404
+
+    
+---

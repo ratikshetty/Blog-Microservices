@@ -1,0 +1,153 @@
+# adding this user for inserting articles
+---
+test_name: Create a user
+stages:
+- name: Create a new user
+  request:
+    url: http://localhost:5000/new
+    json:
+      emailid: user1@csu.fullerton.edu
+      name: user1
+      password: password
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 201
+
+---
+#Adding this user to check posting an article using the wrong password
+---
+test_name: Create a user
+stages:
+- name: Create a new user
+  request:
+    url: http://localhost:5000/new
+    json:
+      emailid: admin@csu.fullerton.edu
+      name: admin
+      password: password
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 201
+
+---
+
+---
+test_name: Trying to post an article without authenticating
+stages:
+- name: Trying to post an article without authenticating
+  request:
+    url: http://localhost:5100/new
+    json:
+      content: Web back end
+      title: project_authenticate
+      author: admin
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 404
+    
+---
+
+---
+test_name: Trying to post an article with wrong password
+stages:
+- name: Trying to post an article with wrong password
+  request:
+    url: http://localhost:5100/new
+    json:
+      content: Web back end
+      title: project_test_wrong
+      author: admin
+    auth:
+    - admin
+    - test
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 404
+    
+---
+
+---
+test_name: Posting an article
+stages:
+- name: Posting an article
+  request:
+    url: http://localhost:5100/new
+    json:
+      content: web back end
+      title: project
+      author: user1
+    auth:
+    - user1
+    - password
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 201
+    
+---
+
+---
+test_name: Posting an article
+stages:
+- name: Posting an article
+  request:
+    url: http://localhost:5100/new
+    json:
+      content: web back end new
+      title: project new
+      author: user1
+    auth:
+    - user1
+    - password
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 201
+    
+---
+
+---
+test_name: Retrieve a newly posted article
+stages:
+- name: Retrieve a newly posted article
+  request:
+    url: http://localhost:5100/search/project
+    method: GET
+    headers:
+      content-type: application/json
+  response:
+    status_code: 200
+      
+    
+---
+
+
+---
+test_name: Check that the newly posted article is the most recent
+stages:
+- name: Check that the newly posted article is the most recent
+  request:
+    url: http://localhost:5100/search/project
+    method: GET
+    headers:
+      content-type: application/json
+  response:
+    status_code: 200
+    body:       
+        {
+          "content": "web back end"
+        }
+      
+    
+---
+

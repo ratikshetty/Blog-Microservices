@@ -1,0 +1,84 @@
+
+---
+test_name: Adding a comment to an article that does not exist
+stages:
+- name: Adding a comment to an article that does not exist
+  request:
+    url: http://localhost:5200/new
+    json:
+      title: rohit_project_exist
+      comment: final_test
+      author: user1
+    auth:
+    - user1
+    - password 
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 404
+    
+---
+
+
+test_name: Adding an anonymous comment to an article
+stages:
+- name: Adding an anonymous comment to an article
+  request:
+    url: http://localhost:5200/new
+    json:
+      title: project
+      comment: final_test1
+      author: user1
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 201
+    
+---
+
+
+---
+test_name: Adding an authenticated comment to an article
+stages:
+- name: Adding an authenticated comment to an article
+  request:
+    url: http://localhost:5200/new
+    json:
+      title: project
+      comment: final_test2
+      author: user1
+    auth:
+    - user1
+    - password 
+    method: POST
+    headers:
+      content-type: application/json
+  response:
+    status_code: 201
+    
+---
+
+---
+test_name: Check comments on an article were returned in order
+stages:
+- name: Check comments on an article were returned in order
+  request:
+    url: http://localhost:5200/retrieve/project/2
+    method: GET
+    headers:
+      content-type: application/json
+  response:
+    status_code: 200
+    body:
+      [
+        {
+          "comment": "final_test2"
+        },
+        {
+          "comment": "final_test1"
+        }
+      ]
+    
+---
