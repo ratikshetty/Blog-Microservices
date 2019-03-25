@@ -1,4 +1,4 @@
-README
+﻿README
 
 Project Title:
 	Implementation of APIs in Python 3 using Flask and SQLite. 
@@ -74,6 +74,6 @@ Deployment:
 	The above written steps in Installation and running the test needs to be followed in order.
 		
 Authors:
-	Ratik Shetty	 	CWID: 888260478
-	Rohit Saha		CWID: 893572115	
-	Parijat Das		CWID: 898161435
+	Ratik Shetty	 	
+	Rohit Saha		
+	Parijat Das		
